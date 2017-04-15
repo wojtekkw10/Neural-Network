@@ -11,16 +11,16 @@ NeuralNetwork::NeuralNetwork(std::vector <int> Structure)
 	Input.resize(Structure[0]);
 
 	//Creating NN--------------------
-	NeuralLayer temp(Input.size()+1, Structure[1]); //+1 for bias
+	NeuralLayer temp(Input.size() + 1, Structure[1]); //+1 for bias
 	NeuralNet.push_back(temp);
 
-	for (int i = 2; i < Structure.size()-1; i++)
+	for (int i = 2; i < Structure.size() - 1; i++)
 	{
-		NeuralLayer temp(Structure[i-1]+1, Structure[i]); //+1 for bias
+		NeuralLayer temp(Structure[i - 1] + 1, Structure[i]); //+1 for bias
 		NeuralNet.push_back(temp);
 	}
 
-	NeuralLayer temp2(Structure[Structure.size()-2]+1, Structure[Structure.size()-1]); //+1 for bias
+	NeuralLayer temp2(Structure[Structure.size() - 2] + 1, Structure[Structure.size() - 1]); //+1 for bias
 	OutputLayer = temp2;
 	Output.resize(Structure[Structure.size() - 1]);
 
@@ -45,9 +45,9 @@ NeuralNetwork::NeuralNetwork(std::vector <int> Structure)
 	{
 		for (int j = 0; j < SizeOfChromosome; j++)
 		{
-				bool negative = rand() % 2;
-				if (negative) Population[i].Chromosome.push_back(((double)rand() / (RAND_MAX)) - 1);//-1 < r < 0
-				else Population[i].Chromosome.push_back(((double)rand() / (RAND_MAX))); //0 < r < 1
+			bool negative = rand() % 2;
+			if (negative) Population[i].Chromosome.push_back(((double)rand() / (RAND_MAX)) - 1);//-1 < r < 0
+			else Population[i].Chromosome.push_back(((double)rand() / (RAND_MAX))); //0 < r < 1
 		}
 	} //Creating Individuals with Chromosomes
 	CrossoverRate = 0.5;
@@ -83,7 +83,7 @@ void NeuralNetwork::SetWeights(std::vector<double> Weights)
 	}
 	for (int j = 0; j < Output.size();j++)
 	{
-		for (int k = 0; k < NeuralNet[NeuralNet.size()-1].Layer.size(); k++) //the last layer
+		for (int k = 0; k < NeuralNet[NeuralNet.size() - 1].Layer.size(); k++) //the last layer
 		{
 			OutputLayer.Layer[j].Weights[k] = Weights[l];
 			l++;
@@ -95,14 +95,6 @@ void NeuralNetwork::SetWeights(std::vector<double> Weights)
 void NeuralNetwork::Evaluate()
 {
 	double bias = 1;
-	//double Activation1 = Input * Weights[0] + Weights[1] * bias;
-	//double Output1 = 1 / (1 + exp(-Activation1));
-	//double Activation2 = Input * Weights[2] + Weights[3] * bias;
-	//double Output2 = 1 / (1 + exp(-Activation2));
-
-	//double Activation3 = Output1 * Weights[4] + Output2 * Weights[5] + Weights[6] * bias;
-	//double Output3 = 1 / (1 + exp(-Activation3));
-	//Output = Output3;
 
 
 	//i - number of weight in neuron
@@ -117,7 +109,7 @@ void NeuralNetwork::Evaluate()
 		{
 			Activation += Input[i] * NeuralNet[0].Layer[j].Weights[i]; // j - number of neuron in a layer
 		}
-		Activation += bias * NeuralNet[0].Layer[j].Weights[NeuralNet[0].Layer[j].Weights.size()-1]; //bias*the last weight
+		Activation += bias * NeuralNet[0].Layer[j].Weights[NeuralNet[0].Layer[j].Weights.size() - 1]; //bias*the last weight
 		NeuralNet[0].Layer[j].Output = 1 / (1 + exp(-Activation)); //sigmoid function
 	}
 	//First Layer Done
@@ -127,11 +119,11 @@ void NeuralNetwork::Evaluate()
 		for (int j = 0; j < NeuralNet[k].Layer.size(); j++)
 		{
 			double Activation = 0; //sum of weights * inputs
-			for (int i = 0; i < NeuralNet[k-1].Layer.size(); i++)
+			for (int i = 0; i < NeuralNet[k - 1].Layer.size(); i++)
 			{
 				Activation += NeuralNet[k - 1].Layer[i].Output * NeuralNet[k].Layer[j].Weights[i];
 			}
-			Activation += bias * NeuralNet[k].Layer[j].Weights[NeuralNet[k].Layer[j].Weights.size()-1];
+			Activation += bias * NeuralNet[k].Layer[j].Weights[NeuralNet[k].Layer[j].Weights.size() - 1];
 			NeuralNet[k].Layer[j].Output = 1 / (1 + exp(-Activation)); //sigmoid function
 		}
 	}
@@ -146,7 +138,7 @@ void NeuralNetwork::Evaluate()
 		{
 			Activation += NeuralNet[thelastLayer].Layer[i].Output * OutputLayer.Layer[j].Weights[i];
 		}
-		Activation += bias * OutputLayer.Layer[j].Weights[OutputLayer.Layer[j].Weights.size()-1];
+		Activation += bias * OutputLayer.Layer[j].Weights[OutputLayer.Layer[j].Weights.size() - 1];
 		OutputLayer.Layer[j].Output = 1 / (1 + exp(-Activation)); //sigmoid function
 	}
 
@@ -156,12 +148,12 @@ void NeuralNetwork::Evaluate()
 	{
 		Output.push_back(OutputLayer.Layer[j].Output);
 	}
-	
+
 
 
 }
 
-void NeuralNetwork::CalculateFitness()
+void NeuralNetwork::CalculateFitnessOfAll()
 {
 	for (int i = 0; i < Population.size(); i++)
 	{
@@ -184,6 +176,23 @@ void NeuralNetwork::CalculateFitness()
 	}
 }
 
+double NeuralNetwork::CalculateFitnessOfNet()
+{
+	double error = 0;
+
+	for (int j = 0; j < LearningMaterial.size(); j++)
+	{
+		SetInput(LearningMaterial[j][0]);
+		Evaluate();
+		std::vector <double> Output = this->Output;
+		for (int i = 0; i < Output.size();i++)
+		{
+			error += pow(Output[i] - LearningMaterial[j][1][i], 2);
+		}
+	}
+	return error;
+}
+
 void NeuralNetwork::SetLearningMaterial(std::vector<std::vector<std::vector <double>>> LearningMaterial)
 {
 	this->LearningMaterial = LearningMaterial;
@@ -191,11 +200,46 @@ void NeuralNetwork::SetLearningMaterial(std::vector<std::vector<std::vector <dou
 
 double NeuralNetwork::Learn()
 {
-	for (int i = 0; i < 1; i++)
+	double speed = 0.05;
+	int numberOfWeight = 0;
+	std::vector <double> weights = Population[0].Chromosome;
+	//for (int i = 0; i < 1; i++)
+	//{
+	//	Evolve();
+	//}
+	//Sort(Population, 0, Population.size() - 1);
+	//return Population[0].fitness;
+	double error3;
+
+	for (int k = 0; k < 1000; k++)
 	{
-		Evolve();
+		for (int j = 0; j < weights.size(); j++)
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				bool neededMore = false;
+				SetWeights(weights);
+
+				double error = CalculateFitnessOfNet();
+				weights[j] += speed;
+				SetWeights(weights);
+				double error2 = CalculateFitnessOfNet();
+				if (error2 < error) neededMore = true;
+
+				if (neededMore) weights[0] += 0;
+				else weights[j] -= 2 * speed;
+
+				error3 = CalculateFitnessOfNet();
+
+				std::cout << error3 << std::endl;
+			}
+		}
 	}
-	return Population[0].fitness;
+
+
+
+
+	return error3;
 }
 
 void NeuralNetwork::Evolve()
@@ -203,7 +247,7 @@ void NeuralNetwork::Evolve()
 	//epoch++;
 	//Sort(Population, 0, Population.size()-1);
 	Mutate();
-	CalculateFitness();
+	CalculateFitnessOfAll();
 
 	//CalculateAverageFitness();
 
@@ -215,13 +259,13 @@ void NeuralNetwork::Evolve()
 
 	//if (displayStats)
 	//{
-		CalculateFitness();
-		Sort(Population, 0, Population.size() - 1);
-		std::cout << "Epoch: " << epoch << " ";
-		std::cout << "The best fitness: " << Population[0].fitness << std::endl;
-		//std::cout << "Average Fitness: " << avgFitness << std::endl << std::endl;
+	CalculateFitnessOfAll();
+	Sort(Population, 0, Population.size() - 1);
+	std::cout << "Epoch: " << epoch << " ";
+	std::cout << "Error: " << Population[0].fitness << std::endl;
+	//std::cout << "Average Fitness: " << avgFitness << std::endl << std::endl;
 	//}
-		epoch++;
+	epoch++;
 }
 
 void NeuralNetwork::Sort(std::vector <Individual> &Array, int left, int right, bool ascending)
@@ -244,7 +288,7 @@ void NeuralNetwork::Sort(std::vector <Individual> &Array, int left, int right, b
 			while (Array[j].fitness<v) j--;
 		}
 
-		if (i <= j) { 
+		if (i <= j) {
 			x = Array[i];
 			Array[i] = Array[j];
 			Array[j] = x;
@@ -412,7 +456,7 @@ void NeuralNetwork::Crossover()
 
 Individual::Individual()
 {
-	
+
 }
 
 Individual::~Individual()

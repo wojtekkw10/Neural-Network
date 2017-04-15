@@ -82,7 +82,8 @@ public:
 	//std::vector <double> Weights;
 	void SetWeights(std::vector <double> Weights);
 
-	void CalculateFitness();
+	void CalculateFitnessOfAll();
+	double CalculateFitnessOfNet();
 
 	void Evolve();
 	void Sort(std::vector <Individual> &Array, int left, int right, bool ascending = true);
